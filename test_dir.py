@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore")
 
 def visualize_result(data, preds, output_dir):
     colors = loadmat('data/color150.mat')['colors']
-    (img_floder, info) = data
+    (img_folder, info) = data
 
     # prediction
     pred_color = colorEncode(preds, colors)
@@ -36,17 +36,17 @@ def visualize_result(data, preds, output_dir):
     #                        axis=1).astype(np.uint8)
     im_vis = pred_color#.astype(np.uint8)
     img_name = info.split('/')[-1]
-    #img_floder = info.split('/')[-2]
-    write_path = join(output_dir, img_floder)
-    write_np_path = join(output_dir+"_np", img_floder)
+    #img_folder = info.split('/')[-2]
+    write_path = join(output_dir, img_folder)
+    write_np_path = join(output_dir+"_np", img_folder)
     if not exists(write_path):
         os.makedirs(write_path)
     if not exists(write_np_path):
         os.makedirs(write_np_path)
-    with open(join(write_np_path, img_name.replace(".png",".sg.pkl")),'wb') as f:
+    with open(join(write_np_path, img_name.replace(".bg.png",".sg.pkl")),'wb') as f:
         pickle.dump(preds, f)
-    #print(join(output_dir,img_floder))
-    #cv2.imwrite(join(write_path, img_name), im_vis)
+    #print(join(output_dir,img_folder))
+    #cv2.imwrite(join(write_path, img_name.replace(".bg.png",".sg.png")), im_vis)
 
 
 def test(segmentation_module, loader, args):
@@ -69,7 +69,7 @@ def test(segmentation_module, loader, args):
                 feed_dict['img_data'] = img
                 del feed_dict['img_ori']
                 del feed_dict['info']
-                del feed_dict['img_floder']
+                del feed_dict['img_folder']
                 feed_dict = async_copy_to(feed_dict, args.gpu_id)
         
                 # forward pass
@@ -79,7 +79,7 @@ def test(segmentation_module, loader, args):
             preds = as_numpy(preds.squeeze(0))
         # visualization
         visualize_result(
-            (batch_data['img_floder'],batch_data['info']),preds, args.result)
+            (batch_data['img_folder'],batch_data['info']),preds, args.result)
 
         #print('[{}] iter {}'
         #      .format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), i))
@@ -106,24 +106,24 @@ def main(args):
     segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
 
     # Dataset and Loader
-    '''
-    floder_names = ['glof','kitchen','office','airpot_terminal','banquet',
+    
+    folder_names = ['golf','kitchen','office','airport_terminal','banquet',
                     'beach','boat','coffee_shop','conference_room','desert',
                     'football','hospital','ice_skating','stage','staircase',
-                    'supermarket','test']
-    '''
-    floder_names = ['test1','test2']
+                    'supermarket']
+    
+    #folder_names = ['test1','test2']
     list_test = []
-    for floder_name in floder_names:
-        path = join(args.test_img_dir,floder_name)
+    for folder_name in folder_names:
+        path = join(args.test_img_dir,folder_name)
         if not exists(path):
             raise ValueError(path,"File Not Found!")
-        filenames = glob.glob(path+"/*png")
+        filenames = glob.glob(path+"/*.bg.png")
         iter_files = tqdm(filenames, ncols=80)
         for file_name in iter_files:
             img_dict = collections.OrderedDict()
             img_dict['fpath_img'] = file_name
-            img_dict['floder_name'] = floder_name
+            img_dict['folder_name'] = folder_name
             list_test.append(img_dict)
     #print("list",list_test)
     #list_test = [{'fpath_img': args.test_img}]
